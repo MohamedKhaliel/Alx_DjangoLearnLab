@@ -1,12 +1,22 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser ,BaseUserManager
-from django.contrib.auth.backends import BaseBackend
+from django.contrib.auth.models import Group ,Permission
 
 # Create your models here.
+
+    
+
 class Book(models.Model):
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=100)
     publication_year =models.IntegerField()
+
+    class Meta:
+        permissions = [("can_view" , "view_book"),
+                        ("can_create" , "create_book"),
+                        ("can_edit" , "edit_book"),
+                        ("can_delete" , "can_delete"),]
+        
     def __str__(self):
         return self.title
     
@@ -41,7 +51,20 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     date_of_birth = models.DateField()
     profile_photo = models.ImageField()
+    is_admin = models.BooleanField(default=False)
     objects = CustomUserManager()
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['date_of_birth', 'profile_photo']
+
+editors_group, created = Group.objects.get_or_create(name='Editors')
+viewers_group, created = Group.objects.get_or_create(name='Viewers')
+admins_group, created = Group.objects.get_or_create(name='Admins')
+can_edit_permission = Permission.objects.get(codename='can_edit')
+can_create_permission = Permission.objects.get(codename='can_create')
+can_view_permission = Permission.objects.get(codename='can_view')
+can_delete_permission = Permission.objects.get(codename='can_delete')
+
+editors_group.permissions.add(can_edit_permission, can_create_permission)
+viewers_group.permissions.add(can_view_permission)
+admins_group.permissions.add(can_edit_permission, can_create_permission, can_view_permission, can_delete_permission)
