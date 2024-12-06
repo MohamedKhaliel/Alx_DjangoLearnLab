@@ -31,3 +31,12 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['content']
+
+
+class TagWidget(forms.TextInput):
+    def render(self, name, value, attrs=None, renderer=None):
+        if value is None:
+            value = ''
+        if isinstance(value, list):
+            value = ', '.join([tag.name for tag in value])
+        return super().render(name, value, attrs, renderer)
