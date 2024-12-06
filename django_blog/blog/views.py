@@ -116,4 +116,4 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         Restrict delete access to the author of the post.
         """
         post = self.get_object()
-        return post.author == self.request.user   
+        return post.author == self.request.user  
