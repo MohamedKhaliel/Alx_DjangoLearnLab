@@ -26,6 +26,7 @@ class PostForm(forms.ModelForm):
         widgets = {
             'tags': TagWidget(attrs={'placeholder': 'Enter tags separated by commas'}),
         }
+        TagWidget()
 
 class CommentForm(forms.ModelForm):
     class Meta:
@@ -33,10 +34,3 @@ class CommentForm(forms.ModelForm):
         fields = ['content']
 
 
-class TagWidget(forms.TextInput):
-    def render(self, name, value, attrs=None, renderer=None):
-        if value is None:
-            value = ''
-        if isinstance(value, list):
-            value = ', '.join([tag.name for tag in value])
-        return super().render(name, value, attrs, renderer)
