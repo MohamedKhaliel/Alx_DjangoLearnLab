@@ -1,10 +1,10 @@
-from django.shortcuts import render , redirect
+from django.shortcuts import render , redirect , get_object_or_404
 from django.contrib.auth import login , logout , authenticate
 from django.contrib import messages
-from .forms import SignUpForm , LoginForm , ProfileForm , PostForm
+from .forms import SignUpForm , LoginForm , ProfileForm , PostForm , CommentForm
 from django.views.generic import ListView , DetailView , CreateView ,UpdateView , DeleteView
-from .models import Post
-from django.urls import reverse_lazy
+from .models import Post , Comment
+from django.urls import reverse_lazy , reverse
 from django.contrib.auth.mixins import LoginRequiredMixin , UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 
@@ -117,4 +117,54 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         Restrict delete access to the author of the post.
         """
         post = self.get_object()
-        return post.author == self.request.user  
+        return post.author == self.request.user 
+    
+
+class CommentCreateView(CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment_form.html'
+    
+    def form_valid(self , form):
+        post = get_object_or_404(Post , id = self.kwargs['post_id'])
+        form.instance.author = self.request.user
+        form.instance.post = post
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        post_id = self.kwargs['post_id']
+        return reverse('post_detail' , kwargs = {'post_id':post_id})
+    
+
+class CommentListView(ListView):
+    model = Comment
+    template_name = 'blog/comments.html'
+    context_object_name = 'comments'    
+    
+    def get_queryset(self):
+        post = get_object_or_404(Post , id = self.kwargs['post_id'])
+        return Comment.objects.filter(post = post)
+    
+    def get_context_data(self , **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['post'] = get_object_or_404(Post , id = self.kwargs['post_id'])
+        return context\
+  
+class CommentUpdateView(UpdateView , LoginRequiredMixin , UserPassesTestMixin):
+    model = Comment
+    fields = ['content']
+    template_name = 'blog/comment_update.html'
+    success_url = reverse_lazy('blog')
+    
+    def test_func(self):
+        comment = self.get_object()
+        return comment.author == self.request.user
+    
+class CommentDeleteView(DeleteView , LoginRequiredMixin , UserPassesTestMixin):
+    model = Comment
+    template_name = 'blog/comment_confirm_delete.html'
+    success_url = reverse_lazy('blog')
+    
+    def test_func(self):
+        comment = self.get_object()
+        return comment.author == self.request.user

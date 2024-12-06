@@ -7,4 +7,13 @@
 <h1>{{ post.title }}</h1>
 <p>{{ post.content }}</p>
 <p>Published on: {{ post.created_at }}</p>
+
+{%for comment in post.comments.all%}
+<ul>
+    <p> {{comment.author}} : {{comment.content}} </p>
+</ul>
+{%empty%}
+<p>No comments yet</p>
+{%endfor%}
+<a href="{% url 'create_comment' post.id %}"> comment</a>
 {% endblock %}
