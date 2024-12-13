@@ -2,31 +2,35 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 
-User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    #bio = serializers.CharField()
     class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'bio', 'profile_picture', 'followers', 'groups', 'user_permissions']
+        model = get_user_model()
+        fields = ['id', 'username', 'password', 'email', 'bio', 'profile_picture']
+        extra_kwargs = {'password': {'write_only': True}}
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField()
     
-    class Meta:
-        model = User
-        fields = ['username', 'password', 'confirm_password', 'email']
-
-    def validate(self, attrs):
-        if attrs['password'] != attrs['confirm_password']:
-            raise serializers.ValidationError({"password": "Passwords must match."})
-        return attrs
-
+    def validate_username(self, value):
+        if get_user_model().objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username is already taken.")
+        return value
+    
     def create(self, validated_data):
-        validated_data.pop('confirm_password')  # Remove confirm_password as it's not needed in the model
+        # Ensure 'email' and 'bio' are handled correctly
+        email = validated_data.get('email')
+        bio = validated_data.get('bio', '')  # Default to empty string if bio is not provided
+
+        if not email:
+            raise serializers.ValidationError("Email is required.")
+
         user = get_user_model().objects.create_user(
             username=validated_data['username'],
-            email=validated_data.get('email', ''),
-            password=validated_data['password']
+            password=validated_data['password'],
+            email=email,
+            bio=bio,
+            profile_picture=validated_data.get('profile_picture', None),
         )
-        Token.objects.create(user=user)  # Automatically create a token for the new user
+        Token.objects.create(user=user)
         return user
