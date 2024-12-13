@@ -7,20 +7,11 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'bio', 'profile_picture', 'followers']
+        fields = ['id', 'username', 'email', 'bio', 'profile_picture', 'followers', 'groups', 'user_permissions']
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        write_only=True,
-        required=True,
-        style={'input_type': 'password'},  # Ensures the password input is masked in forms
-    )
-    confirm_password = serializers.CharField(
-        write_only=True,
-        required=True,
-        style={'input_type': 'password'},
-    )
-
+    password = serializers.CharField()
+    
     class Meta:
         model = User
         fields = ['username', 'password', 'confirm_password', 'email']
