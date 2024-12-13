@@ -12,7 +12,9 @@ from django.db.models import Q
 # Create your views here.
 
 def home(request):
-    return render(request , 'blog/base.html')
+    posts = Post.objects.all()
+    context = {'posts' : posts}
+    return render(request , 'blog/blogs.html' , context)
 
 def register(request):
     if request.method == "POST" :
@@ -181,7 +183,7 @@ class PostSearchView(ListView):
             return Post.objects.filter(
                 Q(title__icontains=query) |
                 Q(content__icontains=query) |
-                Q(tags__name__icontains=query).distinct()
+                Q(tag__name__icontains=query)
             )
         return Post.objects.all()
     
